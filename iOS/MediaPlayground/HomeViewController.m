@@ -175,6 +175,7 @@ typedef NS_ENUM(NSUInteger, MediaSceneType) {
       @(MediaSceneTypeVideoDeviceManagment),
       @(MediaSceneTypeVideoCapture),
       @(MediaSceneTypeVideoRenderOpenGLES),
+      @(MediaSceneTypeVideoRenderMetal),
     ];
     
     NSArray* audioSceneArray = @[
@@ -223,7 +224,7 @@ typedef NS_ENUM(NSUInteger, MediaSceneType) {
       @(MediaSceneTypeVideoDeviceManagment) : @"SceneVCVideoDevice",
       @(MediaSceneTypeVideoCapture) : @"SceneVCVideoCapture",
       @(MediaSceneTypeVideoRenderOpenGLES) : @"SceneVCVideoRenderOpenGLES",
-      @(MediaSceneTypeVideoRenderMetal) : @"",
+      @(MediaSceneTypeVideoRenderMetal) : @"SceneVCVideoRenderMetal",
       @(MediaSceneTypeVideoEncodeHardware) : @"",
       @(MediaSceneTypeVideoDecodeHardware) : @"",
       @(MediaSceneTypeAudioSessionManagment) : @"",

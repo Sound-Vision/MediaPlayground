@@ -1,13 +1,13 @@
 //
-//  SceneVCVideoRenderOpenGLES.m
+//  SceneVCVideoRenderMetal.m
 //  MediaPlayground
 //
 //  Created by Viva on 2025/1/11.
 //
 
-#import "SceneVCVideoRenderOpenGLES.h"
+#import "SceneVCVideoRenderMetal.h"
 #import "VideoCapturer.h"
-#import "VideoRendererOpenGLES.h"
+#import "VideoRendererMetal.h"
 #import <Masonry/Masonry.h>
 
 static NSString* const kVideoRenderFunctionViewCellID = @"kVideoRenderFunctionViewCellID";
@@ -19,20 +19,20 @@ typedef NS_ENUM(NSUInteger, VideoRenderActionType) {
   VideoRenderActionTypeStopCapture
 };
 
-@interface SceneVCVideoRenderOpenGLES ()<VideoCapturerDelegate, UITableViewDataSource, UITableViewDelegate>
+@interface SceneVCVideoRenderMetal ()<VideoCapturerDelegate, UITableViewDataSource, UITableViewDelegate>
 
 @property (nonatomic, strong) UIView* previewView;
 @property (nonatomic, strong) VideoCapturer* videoCapturer;
 
 @property (nonatomic, strong) UIView* renderView;
-@property (nonatomic, strong) VideoRendererOpenGLES* videoRenderer;
+@property (nonatomic, strong) VideoRendererMetal* videoRenderer;
 
 @property (nonatomic, strong) UITableView* functionListView;
 @property (nonatomic, strong) NSArray<NSDictionary*>* functionInfoList;
 
 @end
 
-@implementation SceneVCVideoRenderOpenGLES
+@implementation SceneVCVideoRenderMetal
 
 - (void)viewDidLoad {
   [super viewDidLoad];
@@ -44,7 +44,7 @@ typedef NS_ENUM(NSUInteger, VideoRenderActionType) {
   self.videoCapturer = [[VideoCapturer alloc] init];
   [self.videoCapturer updateDelegate:self];
   
-  self.videoRenderer = [[VideoRendererOpenGLES alloc] init];
+  self.videoRenderer = [[VideoRendererMetal alloc] init];
   [self.videoRenderer attachNativeView:self.renderView];
 }
 

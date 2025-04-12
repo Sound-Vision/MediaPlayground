@@ -140,6 +140,25 @@ static const NSUInteger kMaxTextureCount = 3;
   return self;
 }
 
+#pragma mark - Public
+
+- (void)attachNativeView:(UIView*)native_view {
+  self.display_view = [[OpenGLESDisplayView alloc] initWithFrame:native_view.bounds context:self.gl_context];
+  [native_view addSubview:self.display_view];
+}
+
+- (void)renderVideoFrameWithData:(void*)data width:(NSUInteger)width height:(NSUInteger)height {
+  [self updateTextureWithData:data width:width height:height];
+  [self renderWithWidth:width height:height];
+}
+
+- (void)renderVideoFrameWithPixelBuffer:(CVPixelBufferRef)pixel_buffer width:(NSUInteger)width height:(NSUInteger)height {
+  [self updateTextureWithPixelBuffer:pixel_buffer width:width height:height];
+  [self renderWithWidth:width height:height];
+}
+
+#pragma mark - Function
+
 - (void)prepareRenderResource {
   self.gl_context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
   
@@ -150,6 +169,7 @@ static const NSUInteger kMaxTextureCount = 3;
   for (int i = 0; i < kMaxTextureCount; i++) {
     OpenGLESTexture* texture = new OpenGLESTexture();
     texture->Init(VideoRenderPixelDataTypePlatformRelated, texture_cache_);
+//    texture->Init(VideoRenderPixelDataTypeUniversal, texture_cache_);
     texture_list_.push_back(texture);
   }
   
@@ -160,22 +180,24 @@ static const NSUInteger kMaxTextureCount = 3;
   shader_program_->GetAttribLocation("texture_coordinates", &texture_coordinates_attribute_index_);
 }
 
-- (void)attachNativeView:(UIView*)native_view {
-  self.display_view = [[OpenGLESDisplayView alloc] initWithFrame:native_view.bounds context:self.gl_context];
-  [native_view addSubview:self.display_view];
-}
-
-- (void)renderVideoFrameWithData:(void*)data width:(NSUInteger)width height:(NSUInteger)height {
-  
-}
-
-- (void)renderVideoFrameWithPixelBuffer:(CVPixelBufferRef)pixel_buffer width:(NSUInteger)width height:(NSUInteger)height {
-  // bind context
+- (void)updateTextureWithData:(void*)data width:(NSUInteger)width height:(NSUInteger)height {
   [EAGLContext setCurrentContext:self.gl_context];
   
-  // prepare texture
-  texture_list_[0]->UpdateData(VideoRenderTextureFormatLuminance, width, height, pixel_buffer, 0);// Y
-  texture_list_[1]->UpdateData(VideoRenderTextureFormatLuminanceAlpha, width, height, pixel_buffer, 0);// UV
+  uint32_t offset = (uint32_t)(width * height);
+  texture_list_[0]->UpdateData(VideoRenderTextureFormatLuminance, (uint32_t)width, (uint32_t)height, data, 0);
+  texture_list_[1]->UpdateData(VideoRenderTextureFormatLuminanceAlpha, (uint32_t)width, (uint32_t)height, data, offset);
+}
+
+- (void)updateTextureWithPixelBuffer:(CVPixelBufferRef)pixel_buffer width:(NSUInteger)width height:(NSUInteger)height {
+  [EAGLContext setCurrentContext:self.gl_context];
+  
+  texture_list_[0]->UpdateData(VideoRenderTextureFormatLuminance, (uint32_t)width, (uint32_t)height, pixel_buffer, 0);// Y
+  texture_list_[1]->UpdateData(VideoRenderTextureFormatLuminanceAlpha, (uint32_t)width, (uint32_t)height, pixel_buffer, 0);// UV
+}
+
+- (void)renderWithWidth:(NSUInteger)width height:(NSUInteger)height {
+  // bind context
+  [EAGLContext setCurrentContext:self.gl_context];
   
   // prepare render target
   GLint frame_buffer_id_old = 0;
@@ -191,11 +213,11 @@ static const NSUInteger kMaxTextureCount = 3;
   // start shader program
   shader_program_->StartProgram();
   
-  // put texture data into shader
+  // bind texture with shader
   shader_program_->SetTexture("input_texture_0", 0, texture_list_[0]->GetTextureId());
   shader_program_->SetTexture("input_texture_1", 1, texture_list_[1]->GetTextureId());
   
-  // put vertex coordinate data into shader
+  // bind vertex coordinates with shader
   GLuint vertex_coordinates_buffer_id = 0;
   glGenBuffers(1, &vertex_coordinates_buffer_id);
   glBindBuffer(GL_ARRAY_BUFFER, vertex_coordinates_buffer_id);
@@ -211,7 +233,7 @@ static const NSUInteger kMaxTextureCount = 3;
   texture_coordiantes[5] = OpenGLESDefaultTextureCoordinates[7];
   texture_coordiantes[7] = OpenGLESDefaultTextureCoordinates[5];
   
-  // put texture coordinate data into shader
+  // bind texture coordinates with shader
   GLuint texture_coordinates_buffer_id = 0;
   glGenBuffers(1, &texture_coordinates_buffer_id);
   glBindBuffer(GL_ARRAY_BUFFER, texture_coordinates_buffer_id);
@@ -230,6 +252,7 @@ static const NSUInteger kMaxTextureCount = 3;
   glDeleteBuffers(1, &texture_coordinates_buffer_id);
   glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer_id_old);
   
+  // show render result on screen
   [self.gl_context presentRenderbuffer:GL_RENDERBUFFER];
 }
 
